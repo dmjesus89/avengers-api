@@ -10,7 +10,7 @@ public class DeleteAvengerHandler implements RequestHandler<AvengerEntity, Funct
 	@Override
 	public FunctionResponse handleRequest(AvengerEntity input, Context context) {
 
-		context.getLogger().log("[#] - Iniciando Operacao de remoção do avenger de id " + input.getId());
+		context.getLogger().log("[#] - Iniciando Operacao de remoÃ§Ã£o do avenger de id " + input.getId());
 			
 		return FunctionResponse.builder().setStatusCode(204).build();
 	}

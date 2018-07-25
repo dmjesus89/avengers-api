@@ -19,25 +19,26 @@ And param name = 'Captain'
 And param secretIdentity = 'Rogers'
 When method get 
 Then status 200
-And match response == {id: "1", name: 'Captain America', secretIdentity: 'Steve Rogers'}
+And match response == {id: "#string", name: 'Captain America', secretIdentity: 'Steve Rogers'}
 
 #lambda
-Scenario: Pesquisar Avenger por id
-
-Given path 'avengers' , 1
-When method get
-Then status 200
-And match response == {id: "1", name: 'Wolwerine', secretIdentity: 'Logan'}
-
-#lambda
-Scenario: Deve criar um novo Avenger
+Scenario: Criação de um novo Avenger com sucesso
 
 Given path 'avengers'
 And request {name: 'Iron Man', secretIdentity: 'Tony Stark'}
 When method post
 Then status 201
-And match response ==  {id: "1", name: "Iron Man", secretIdentity: 'Tony Stark'}
+And match response ==  {id: '#string', name: "Iron Man", secretIdentity: 'Tony Stark'}
 
+* def retorno = response
+
+Given path 'avengers' , response.id
+When method get
+Then status 200
+And match response == retorno
+
+
+#lambda
 Scenario: Deve atualizar dados de um Avenger
 
 Given path 'avengers', 1
@@ -46,6 +47,7 @@ When method put
 Then status 200
 And match response ==  {id: "1", name: 'Captain America', secretIdentity: 'Steve Rogers'}
 
+#lambda
 Scenario: Deve remover um Avenger por id
 
 Given path 'avengers', 1
