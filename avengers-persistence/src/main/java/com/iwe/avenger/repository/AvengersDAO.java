@@ -56,12 +56,14 @@ public class AvengersDAO {
 		eav.put(":name", new AttributeValue().withS(name));
 		eav.put(":secretIdentity", new AttributeValue().withS(secretIdentity));
 
+		AvengerEntity avenger = new AvengerEntity();
+		avenger.setSecretIdentity(secretIdentity);
+		
 		DynamoDBQueryExpression<AvengerEntity> queryExpression = new DynamoDBQueryExpression<AvengerEntity>()
-				.withKeyConditionExpression("real_name = :name and secret_identity = :secretIdentity")
-				.withExpressionAttributeValues(eav)
-				.withIndexName("real_name-secret_identity-index");
-		
-		
+				.withKeyConditionExpression("secret_identity = :secretIdentity AND real_name = :name")
+				.withIndexName("secret_identity-index")
+				.withConsistentRead(false)
+				.withExpressionAttributeValues(eav);
 
 		return mapper.query(AvengerEntity.class, queryExpression);
 	}
