@@ -60,6 +60,8 @@ public class AvengersDAO {
 				.withKeyConditionExpression("real_name = :name and secret_identity = :secretIdentity")
 				.withExpressionAttributeValues(eav)
 				.withIndexName("real_name-secret_identity-index");
+		
+		
 
 		return mapper.query(AvengerEntity.class, queryExpression);
 	}
