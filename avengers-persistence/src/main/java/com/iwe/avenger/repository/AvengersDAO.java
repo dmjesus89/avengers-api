@@ -10,6 +10,8 @@ import org.apache.http.HttpStatus;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
+import com.amazonaws.services.dynamodbv2.model.Condition;
 import com.amazonaws.services.dynamodbv2.model.InternalServerErrorException;
 import com.iwe.avenger.entity.AvengerEntity;
 
@@ -52,18 +54,26 @@ public class AvengersDAO {
 
 	public List<AvengerEntity> find(final String name, final String secretIdentity) {
 
-		final Map<String, AttributeValue> eav = new HashMap<String, AttributeValue>();
-		eav.put(":name", new AttributeValue().withS(name));
-		eav.put(":secretIdentity", new AttributeValue().withS(secretIdentity));
-
-		AvengerEntity avenger = new AvengerEntity();
-		avenger.setSecretIdentity(secretIdentity);
+//		final Map<String, AttributeValue> eav = new HashMap<String, AttributeValue>();
+//		eav.put(":name", new AttributeValue().withS(name));
+//		eav.put(":secretIdentity", new AttributeValue().withS(secretIdentity));
+//
+//		DynamoDBQueryExpression<AvengerEntity> queryExpression = new DynamoDBQueryExpression<AvengerEntity>()
+//				.withKeyConditionExpression("real_name = :name")
+//				.withRangeKeyConditions(rangeKeyConditions)
+//				.withExpressionAttributeValues(eav);
 		
-		DynamoDBQueryExpression<AvengerEntity> queryExpression = new DynamoDBQueryExpression<AvengerEntity>()
-				.withKeyConditionExpression("secret_identity = :secretIdentity AND real_name = :name")
-				.withIndexName("secret_identity-index")
-				.withConsistentRead(false)
-				.withExpressionAttributeValues(eav);
+		final AvengerEntity avenger = new AvengerEntity();
+		avenger.setName(name);
+		
+		
+		Condition rangeKeyCondition = new Condition();
+		rangeKeyCondition.withComparisonOperator(ComparisonOperator.EQ).withAttributeValueList(new AttributeValue().withS(secretIdentity));
+		
+		final DynamoDBQueryExpression<AvengerEntity> queryExpression = new DynamoDBQueryExpression<AvengerEntity>()
+				.withHashKeyValues(avenger);
+				//.withRangeKeyConditions(":secret_name", rangeKeyCondition);
+		
 
 		return mapper.query(AvengerEntity.class, queryExpression);
 	}
