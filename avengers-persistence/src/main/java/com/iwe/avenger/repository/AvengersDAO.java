@@ -1,20 +1,20 @@
 package com.iwe.avenger.repository;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.http.HttpStatus;
 
-//import org.apache.logging.log4j.LogManager;
-//import org.apache.logging.log4j.Logger;
-
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.InternalServerErrorException;
 import com.iwe.avenger.entity.AvengerEntity;
 
 public class AvengersDAO {
 
-	//private static final Logger logger = LogManager.getLogger(AvengersDAO.class);
-	
 	private static final DynamoDBMapper mapper = DynamoDBManager.mapper();
 
 	private static volatile AvengersDAO instance;
@@ -34,23 +34,34 @@ public class AvengersDAO {
 	}
 
 	public AvengerEntity find(String id) {
-//		logger.info("[#] - Buscando o Avenger com o id " + id + " no DynamoDB");
 		final AvengerEntity avenger = mapper.load(AvengerEntity.class, id);
 		return Optional.ofNullable(avenger).get();
 	}
 
 	public AvengerEntity save(AvengerEntity avenger) {
 
-//		logger.info("[#] - Salvando o Avenger: " + avenger.getName() + " no DynamoDB");
-
 		try {
 			mapper.save(avenger);
-//			logger.info("[#] - Avenger salco com sucesso");
 		} catch (Exception e) {
 			InternalServerErrorException internalError = new InternalServerErrorException(e.getMessage());
 			internalError.setStatusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
-			throw internalError ;
+			throw internalError;
 		}
 		return avenger;
 	}
+
+	public List<AvengerEntity> find(final String name, final String secretIdentity) {
+
+		final Map<String, AttributeValue> eav = new HashMap<String, AttributeValue>();
+		eav.put(":name", new AttributeValue().withS(name));
+		eav.put(":secretIdentity", new AttributeValue().withS(secretIdentity));
+
+		DynamoDBQueryExpression<AvengerEntity> queryExpression = new DynamoDBQueryExpression<AvengerEntity>()
+				.withKeyConditionExpression("real_name = :name and secret_identity = :secretIdentity")
+				.withExpressionAttributeValues(eav)
+				.withIndexName("real_name-secret_identity-index");
+
+		return mapper.query(AvengerEntity.class, queryExpression);
+	}
+
 }

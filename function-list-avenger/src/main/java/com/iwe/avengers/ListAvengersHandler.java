@@ -1,7 +1,6 @@
 package com.iwe.avengers;
 
-import java.util.Arrays;
-import java.util.Optional;
+import java.util.List;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -17,39 +16,32 @@ public class ListAvengersHandler implements RequestHandler<AvengerEntity, Functi
 	@Override
 	public FunctionResponse handleRequest(AvengerEntity avenger, Context context) {
 
-		context.getLogger().log("[#] - Iniciando função de listagem");
+		context.getLogger().log("[#] - Iniciando função de pesquisa");
 
 		if (!StringUtils.isNullOrEmpty(avenger.getId())) {
+
 			context.getLogger().log("[#] - Operação identificada: Pesquisar por id");
 
 			final AvengerEntity avengerFind = dao.find(avenger.getId());
 
 			if (avengerFind == null) {
 
+				context.getLogger().log("[#] - Avenger não encontrado");
 				return FunctionResponse.builder().setStatusCode(404).build();
 
 			} else {
 
-				return FunctionResponse.builder().setStatusCode(404).setObjectBody(avengerFind).build();
+				context.getLogger().log("[#] - Vingador encontrado");
+				return FunctionResponse.builder().setStatusCode(200).setObjectBody(avengerFind).build();
 			}
 
 		}
 
-		if (StringUtils.isNullOrEmpty(avenger.getName()) && StringUtils.isNullOrEmpty(avenger.getSecretIdentity())) {
+		final List<AvengerEntity> avengers = this.dao.find(avenger.getName(), avenger.getSecretIdentity());
 
-			context.getLogger().log("[#] - Operação identificada: Listar todos");
+		context.getLogger().log("[#] - Operação identificada: Listar todos");
 
-			return FunctionResponse.builder().setStatusCode(200)
-					.setObjectBody(Arrays.asList(new AvengerEntity("1", "Captain America", "Steve Rogers"),
-							new AvengerEntity("2", "Spider Man", "Peter Parker")))
-					.build();
-		}
-
-		context.getLogger().log("[#] - Operação identificada: Listar por Parametros");
-
-		return FunctionResponse.builder().setStatusCode(200)
-				.setObjectBody(new AvengerEntity("1", "Captain America", "Steve Rogers")).build();
-
+		return FunctionResponse.builder().setStatusCode(200).setObjectBody(avengers).build();
 	}
 
 }
