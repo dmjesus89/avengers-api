@@ -3,26 +3,7 @@ Feature: Contem os testes de integracao para a API Gerenciadora dos Avengers
 Background:
 * url 'https://s1l920zsqk.execute-api.us-east-1.amazonaws.com/dev'
 
-#lambda
-Scenario: Retorna todos os Avengers
-
-Given path 'avengers'
-When method get
-Then status 200
-#And match response contains {id: '#string', name: 'Spider Man', secretIdentity: 'Peter Parker'}
-
-#lambda
-Scenario: Pesquisar Avenger por name ou secretIdentity
-
-Given path 'avengers'
-And param name = 'Captain'
-And param secretIdentity = 'Rogers'
-When method get 
-Then status 200
-#And match response == {id: "#string", name: 'Captain America', secretIdentity: 'Steve Rogers'}
-
-#lambda
-Scenario: Criação de um novo Avenger com sucesso
+Scenario: Creates a new Avenger and search by Id and Name
 
 Given path 'avengers'
 And request {name: 'Iron Man', secretIdentity: 'Tony Stark'}
@@ -30,12 +11,30 @@ When method post
 Then status 201
 And match response ==  {id: '#string', name: "Iron Man", secretIdentity: 'Tony Stark'}
 
-* def retorno = response
+* def savedAvenger = response
 
-Given path 'avengers' , response.id
+# Get Avenger by id
+Given path 'avengers' , savedAvenger.id
 When method get
 Then status 200
-#And match response == retorno
+And match response == savedAvenger
+
+# Get Avenger By Name
+Given path 'avengers'
+And param name = savedAvenger.name
+When method get 
+Then status 200
+And match response contains savedAvenger
+
+
+
+
+
+
+
+
+
+
 
 
 #lambda

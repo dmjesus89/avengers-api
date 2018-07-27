@@ -1,19 +1,16 @@
 package com.iwe.avenger.repository;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.apache.http.HttpStatus;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
-import com.amazonaws.services.dynamodbv2.model.Condition;
 import com.amazonaws.services.dynamodbv2.model.InternalServerErrorException;
-import com.iwe.avenger.entity.AvengerEntity;
+import com.iwe.avenger.entity.Avenger;
+import com.iwe.avenger.exception.AvengerNotFoundException;
 
 public class AvengersDAO {
 
@@ -35,12 +32,18 @@ public class AvengersDAO {
 		return instance;
 	}
 
-	public AvengerEntity find(String id) {
-		final AvengerEntity avenger = mapper.load(AvengerEntity.class, id);
-		return Optional.ofNullable(avenger).get();
+	public Avenger find(String id) {
+		
+		try {
+			final Avenger avenger = mapper.load(Avenger.class, id);
+			return Optional.ofNullable(avenger).get();
+		} catch (NoSuchElementException e) {
+			throw new AvengerNotFoundException();
+		}
+		
 	}
 
-	public AvengerEntity save(AvengerEntity avenger) {
+	public Avenger save(Avenger avenger) {
 
 		try {
 			mapper.save(avenger);
@@ -52,30 +55,18 @@ public class AvengersDAO {
 		return avenger;
 	}
 
-	public List<AvengerEntity> find(final String name, final String secretIdentity) {
+	public List<Avenger> findByName(final String name) {
 
-//		final Map<String, AttributeValue> eav = new HashMap<String, AttributeValue>();
-//		eav.put(":name", new AttributeValue().withS(name));
-//		eav.put(":secretIdentity", new AttributeValue().withS(secretIdentity));
-//
-//		DynamoDBQueryExpression<AvengerEntity> queryExpression = new DynamoDBQueryExpression<AvengerEntity>()
-//				.withKeyConditionExpression("real_name = :name")
-//				.withRangeKeyConditions(rangeKeyConditions)
-//				.withExpressionAttributeValues(eav);
+		final DynamoDBQueryExpression<Avenger> queryExpression = new DynamoDBQueryExpression<Avenger>();
 		
-		final AvengerEntity avenger = new AvengerEntity();
+		final Avenger avenger = new Avenger();
 		avenger.setName(name);
-		
-		
-		Condition rangeKeyCondition = new Condition();
-		rangeKeyCondition.withComparisonOperator(ComparisonOperator.EQ).withAttributeValueList(new AttributeValue().withS(secretIdentity));
-		
-		final DynamoDBQueryExpression<AvengerEntity> queryExpression = new DynamoDBQueryExpression<AvengerEntity>()
-				.withHashKeyValues(avenger);
-				//.withRangeKeyConditions(":secret_name", rangeKeyCondition);
-		
 
-		return mapper.query(AvengerEntity.class, queryExpression);
+        queryExpression.withHashKeyValues(avenger)
+                       .withIndexName("HeroName-index")
+                       .withConsistentRead(false);
+
+		return mapper.query(Avenger.class, queryExpression);
 	}
 
 }
